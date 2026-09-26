@@ -1,6 +1,6 @@
 ---
 name: fast-verification
-description: Make a slow check (scorer, eval, benchmark, test suite, backtest) fast without changing its answer, and turn "is the candidate better?" into a mechanical ACCEPT / REJECT / UNSURE verdict. Use when an agent loop re-runs the same expensive check many times, when a check takes minutes and most inputs did not change, or when keep/reject decisions are being argued round after round. Ships two stdlib-only files: fastgate.py for unittest or pytest suites, and fastcheck_template.py for any other scorer, both with a content-hash cache, parallel workers and a paired grouped-bootstrap gate.
+description: Make a slow check (scorer, eval, benchmark, test suite, backtest) fast without changing its answer, and turn "is the candidate better?" into a mechanical ACCEPT / REJECT / UNSURE verdict. Use when an agent loop re-runs the same expensive check many times, when a check takes minutes and most inputs did not change, or when keep/reject decisions are being argued round after round. Ships two stdlib-only files (fastgate.py for unittest or pytest suites, fastcheck_template.py for any other scorer), both with a content-hash cache, parallel workers and a paired grouped-bootstrap gate.
 ---
 
 # Fast verification
