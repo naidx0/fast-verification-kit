@@ -47,10 +47,10 @@ xychart-beta
 flowchart LR
     subgraph before [Before: every run reruns everything]
         direction TB
-        b1[304 tests: 39.1 s]
-        b2[323 tests, Windows: 257 s]
-        b3[275 tests, Docker: 136 s]
-        b4[354 tests, Docker: 2317 s]
+        b1[Harness build tests, 304: 39.1 s]
+        b2[Harness build tests, Windows, 323: 257 s]
+        b3[Containerized eval tests, 275: 136 s]
+        b4[Sandbox pipeline tests, 354: 2317 s]
     end
     subgraph after [After fastgate: same verdict on every test]
         direction TB
@@ -101,10 +101,10 @@ flowchart TD
 
 | Suite | Tests | Before | After | Verdicts changed |
 |---|---|---|---|---|
-| ML harness small-model, 4-core Linux | 304 | 39.1 s serial | 1.65 s fresh, 0.02 s unchanged | 0 |
-| ML harness small-model, Windows | 323 | 212 to 270 s | 120 to 148 s fresh | 0 |
-| Touchstone gate, Windows, Docker | 354 | 2317 s | 1569 s fresh | 0 |
-| Executed Pivots, Windows, Docker | 275 | 135.6 s median | 120.9 s fresh, 1.2 to 1.7 s unchanged | 0 |
+| Harness build tests, 4-core Linux | 304 | 39.1 s serial | 1.65 s fresh, 0.02 s unchanged | 0 |
+| Harness build tests, Windows | 323 | 212 to 270 s | 120 to 148 s fresh | 0 |
+| Sandbox pipeline tests, Windows, Docker | 354 | 2317 s | 1569 s fresh | 0 |
+| Containerized eval tests, Windows, Docker | 275 | 135.6 s median | 120.9 s fresh, 1.2 to 1.7 s unchanged | 0 |
 
 The biggest win on the first suite was not parallelism. Profiling showed half the time
 was test servers idling (a 0.5 s shutdown poll, a 2 ms sleep per streamed chunk).
