@@ -10,6 +10,93 @@ better?" a mechanical ACCEPT / REJECT / UNSURE verdict. Standard library only.
   backtest). Fill in six small adapter functions.
 - `skills/fast-verification/SKILL.md`: the procedure, written for coding agents.
 
+## At a glance
+
+### How it works
+
+```mermaid
+flowchart LR
+    A[Hash every file the tests read<br/>+ Python version, env vars] --> B[One key per test file]
+    B --> C{Key in cache?}
+    C -- yes --> D[Serve the stored verdict<br/>0.02 s]
+    C -- no --> E[Compile changed files<br/>syntax error: rejected in ms]
+    E --> F[Run files in parallel<br/>longest first, Docker files alone]
+    F --> G[Store the verdict<br/>failures too]
+```
+
+Edit a source file and every test file reruns. Edit one test file and only that file
+reruns. Change nothing and the gate costs one hash.
+
+### What it saves
+
+One suite, seconds per full run, each change measured on its own:
+
+```mermaid
+xychart-beta
+    title "Seconds per full run (lower is better)"
+    x-axis ["Before", "Parallel only", "Waste removed", "Both", "1 file edited", "Nothing changed"]
+    y-axis "seconds" 0 --> 40
+    bar [39.1, 19.6, 4.1, 1.65, 1.46, 0.02]
+```
+
+![Where the speed came from](docs/speed-breakdown.png)
+
+### Before and after, four suites
+
+```mermaid
+flowchart LR
+    subgraph before [Before: every run reruns everything]
+        direction TB
+        b1[304 tests: 39.1 s]
+        b2[323 tests, Windows: 257 s]
+        b3[275 tests, Docker: 136 s]
+        b4[354 tests, Docker: 2317 s]
+    end
+    subgraph after [After fastgate: same verdict on every test]
+        direction TB
+        a1[1.65 s fresh, 0.02 s unchanged]
+        a2[136 s fresh, under 0.5 s unchanged]
+        a3[121 s fresh, 1.2 to 1.7 s unchanged]
+        a4[1569 s fresh]
+    end
+    b1 --> a1
+    b2 --> a2
+    b3 --> a3
+    b4 --> a4
+```
+
+![Before and after on four suites](docs/four-suites.png)
+
+### How it keeps agents honest
+
+An agent loop reruns the same check hundreds of times. fastgate makes each rerun cheap,
+and two gates stop the loop from trusting a shortcut or a lucky number.
+
+```mermaid
+flowchart TD
+    S[Adopting fastgate in a repo] --> Q{fastgate equal:<br/>same verdict as the serial run<br/>on every test?}
+    Q -- no --> X[Do not adopt.<br/>Fix the missing input:<br/>--env, --exclude, --serial]
+    X --> Q
+    Q -- yes, EXACT --> L[Agent loop]
+    L --> E[Agent edits code]
+    E --> R[fastgate run]
+    R -- FAIL --> F[Cached failure:<br/>same input, same failure,<br/>no wasted reruns] --> E
+    R -- PASS --> AB{Changes a score?<br/>fastgate ab vs baseline}
+    AB -- ACCEPT --> K[Keep]
+    AB -- REJECT --> V[Revert]
+    AB -- UNSURE --> M[More items or revert]
+    K --> L
+    V --> L
+    M --> L
+```
+
+- **equal** is the proof: the fast gate is adopted only at zero changed verdicts.
+- **run** is the gate: exit code 0 means PASS, and a syntax error is rejected before
+  any test runs.
+- **ab** is the keep rule: paired by item, grouped by what is correlated,
+  bootstrapped, ACCEPT only when the lower 90% bound is above zero. Nobody argues
+  about noise.
+
 ## Numbers
 
 | Suite | Tests | Before | After | Verdicts changed |
